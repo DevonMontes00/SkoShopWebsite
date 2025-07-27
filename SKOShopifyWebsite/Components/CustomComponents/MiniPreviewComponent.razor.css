@@ -1,24 +1,37 @@
 ﻿.control {
     height: 11.25rem;
-    width: 18.75rem;
+    
+    display: flex;
 }
 
 .left-button {
-    height: 140rem;
-    width: 3.125rem;
-    background-color:white;
+    height: 8.75rem;
+    width: 5rem;
+    background-color:transparent;
+    border:hidden;
 }
 
 .right-button {
-    height: 140rem;
-    width: 3.125rem;
-    background-color: white;
+    height: 8.75rem;
+    width: 5rem;
+    background-color: transparent;
+    border: hidden;
 }
 
-.images {
-
+.images-container {
+    display: flex;
 }
 
 .image-preview {
+    width: 8rem;
+    height: 8rem;
+    background-color: white;
+    border-radius: 15px;
+}
 
+.image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* or cover */
+    display: block;
 }

@@ -97,7 +97,7 @@ namespace SKOShopifyWebsite.Services
                     currencyCode
                     }}
                 }}
-                images(first: 3) {{
+                images(first: 10) {{
                     edges {{
                     node {{
                         src

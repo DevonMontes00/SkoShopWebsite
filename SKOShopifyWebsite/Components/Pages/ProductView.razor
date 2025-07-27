@@ -1,6 +1,7 @@
 ﻿@page "/product/{Handle}"
 @using SKOShopifyWebsite.Models
 @using SKOShopifyWebsite.Services
+@using SKOShopifyWebsite.Components.CustomComponents
 @inject ShopifyService Shopify
 
 <section class="main-layout">
@@ -15,7 +16,7 @@
                 <img class="image" src="@displayProduct.Images?.Edges?.FirstOrDefault()?.Node?.Src" alt="@displayProduct.Title" />
             </div>
             <div class="mini-preview-holder">
-
+                <MiniPreviewComponent ListOfImages="@imageUrls"/>
             </div>
         </section>
 
@@ -30,11 +31,11 @@
                 </div>
             </div>
             <p class="product-description">
-                    <b3>@displayProduct?.Description</b3>
+                <b3>@displayProduct?.Description</b3>
             </p>
 
             <div class="product-info-dropdown">
-                
+
                 <div class="dropdown">
                     <div class="dropdown-arrow-container">
                         <h2 class="info-title">Product Info</h2>
@@ -42,7 +43,7 @@
                     </div>
                     <hr class="line">
                 </div>
-                
+
             </div>
 
             <div class="product-sizes">
@@ -71,6 +72,8 @@
     public string ProductDescription => displayProduct?.Description ?? "";
 
     public List<string> sizes => displayProduct?.Options?.FirstOrDefault(o => o.Name == "Size")?.Values ?? new List<string>();
+
+    public List<string> imageUrls => displayProduct?.Images?.Edges?.Select(e => e.Node.Src).ToList() ?? new();
 
     protected override async Task OnParametersSetAsync()
     {
