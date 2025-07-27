@@ -1,0 +1,41 @@
+﻿@inject ShopifyService Shopify
+@inject NavigationManager Nav
+@using Models
+@using SKOShopifyWebsite.Services
+
+<section class="control">
+    <div class="product-display" @onclick="NavigateToProduct">
+        <img class="image" src="@displayProduct.Images?.Edges?.FirstOrDefault()?.Node?.Src" alt="@displayProduct.Title" />
+    </div>
+
+    <div class="product-info">
+        <div class="product-text">
+            <div class="product-title">
+                @displayProduct.Title 
+            </div>
+            <div class="product-cost">
+                <!--@displayProduct.Variants.Edges.First().Node.PriceV2.Amount-->
+            </div>
+        </div>
+    </div>
+</section>
+
+
+@code {
+    [Parameter]
+    public Product displayProduct { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+
+    private void NavigateToProduct()
+    {
+        if (!string.IsNullOrWhiteSpace(displayProduct?.Handle))
+        {
+            Nav.NavigateTo($"/product/{displayProduct.Handle}");
+        }
+    }
+    
+}

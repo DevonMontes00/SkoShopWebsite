@@ -1,0 +1,63 @@
+@font-face {
+    font-family: 'Rubik';
+    src: url('/fonts/Rubik-VariableFont_wght.ttf') format('ttf');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+html, body {
+    font-family: Rubik;
+    background-color: #1A1A1A;
+}
+
+p {
+    font-family: Rubik
+}
+
+a, .btn-link {
+    color: #B8B8B8;
+    font-family: Rubik
+}
+
+h1 {
+    font-family: Rubik;
+    color: white;
+    font-size: 6.25rem;
+}
+
+h2 {
+    font-family: Rubik;
+    color: #B8B8B8;
+    font-size: 1.875rem;
+    font-weight: 600;
+}
+
+h3 {
+    font-family: Rubik;
+    color: #B8B8B8;
+    font-size: 3.125rem;
+}
+
+b1 {
+    font-family: Rubik;
+    color: #B8B8B8;
+    font-size: 1.875rem;
+}
+
+b2 {
+    font-family: Rubik;
+    color: #848484;
+    font-size: 1.875rem;
+}
+
+b3 {
+    font-family: Rubik;
+    color: #636363;
+    font-size: 1.563rem;
+}
+
+.product-grid {
+    
+}
+

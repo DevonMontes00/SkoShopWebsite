@@ -1,0 +1,24 @@
+﻿.control {
+    height: 11.25rem;
+    width: 18.75rem;
+}
+
+.left-button {
+    height: 140rem;
+    width: 3.125rem;
+    background-color:white;
+}
+
+.right-button {
+    height: 140rem;
+    width: 3.125rem;
+    background-color: white;
+}
+
+.images {
+
+}
+
+.image-preview {
+
+}

@@ -1,0 +1,80 @@
+﻿@page "/product/{Handle}"
+@using SKOShopifyWebsite.Models
+@using SKOShopifyWebsite.Services
+@inject ShopifyService Shopify
+
+<section class="main-layout">
+    @if (displayProduct == null)
+    {
+        <p>Loading...</p>
+    }
+    else
+    {
+        <section class="left-column"> 
+            <div class="main-preview">
+                <img class="image" src="@displayProduct.Images?.Edges?.FirstOrDefault()?.Node?.Src" alt="@displayProduct.Title" />
+            </div>
+            <div class="mini-preview-holder">
+
+            </div>
+        </section>
+
+        <section class="right-column"> 
+            <div class="main-text">
+                <div class="product-title">
+                    <h1>@displayProduct?.Title</h1>
+                </div>
+
+                <div class="product-cost">
+                    <h3>$@displayProduct?.PriceRange.MinVariantPrice.Amount</h3>
+                </div>
+            </div>
+            <p class="product-description">
+                    <b3>@displayProduct?.Description</b3>
+            </p>
+
+            <div class="product-info-dropdown">
+                
+                <div class="dropdown">
+                    <div class="dropdown-arrow-container">
+                        <h2 class="info-title">Product Info</h2>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" class="dropdown-arrow"><path fill="#707070" d="M297.4 169.4C309.9 156.9 330.2 156.9 342.7 169.4L534.7 361.4C547.2 373.9 547.2 394.2 534.7 406.7C522.2 419.2 501.9 419.2 489.4 406.7L320 237.3L150.6 406.6C138.1 419.1 117.8 419.1 105.3 406.6C92.8 394.1 92.8 373.8 105.3 361.3L297.3 169.3z"/></svg>
+                    </div>
+                    <hr class="line">
+                </div>
+                
+            </div>
+
+            <div class="product-sizes">
+                @foreach (var size in sizes)
+                {
+                    <button class="size-button">
+                        <b3>@size</b3>
+                    </button>
+                }
+            </div>
+        </section>
+    }
+</section>
+
+
+@code {
+    [Parameter]
+    public string Handle { get; set; }
+
+    public Product displayProduct { get; set; }
+
+    public string PriceString =>
+        displayProduct?.PriceRange?.MinVariantPrice?.Amount + " " +
+        displayProduct?.PriceRange?.MinVariantPrice?.CurrencyCode;
+
+    public string ProductDescription => displayProduct?.Description ?? "";
+
+    public List<string> sizes => displayProduct?.Options?.FirstOrDefault(o => o.Name == "Size")?.Values ?? new List<string>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        displayProduct = await Shopify.GetProductByHandleAsync(Handle);
+    }
+}
+

@@ -1,0 +1,49 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@inject ShopifyService Shopify
+@using Models
+@using SKOShopifyWebsite.Services
+@using SKOShopifyWebsite.Components.CustomComponents
+
+<PageTitle>Home</PageTitle>
+
+
+
+
+<section class="main-layout">
+
+    <section class="logo-container">
+        <img src="@storeLogoPath" class="logo"/>
+    </section>
+
+    @if (products == null)
+    {
+        <p><em>Loading…</em></p>
+    }
+    else
+    {
+        <section class="product-grid">
+            @foreach (var p in products)
+            {
+                <ProductDisplayComponent displayProduct="p"/>
+            }
+
+        </section>
+    }
+
+    <section class="footer">
+        <a href="/about">About</a> |
+        <a href="/terms">Terms</a> |
+        <a href="/faq">FAQ</a> |
+        <a href="/socials">Socials</a>
+    </section>
+</section>
+@code {
+    private List<Product>? products;
+    private string storeLogoPath = "images/store-logo-black-white.png";
+
+    protected override async Task OnInitializedAsync()
+    {
+        products = await Shopify.GetProductsAsync();
+    }
+}
