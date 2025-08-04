@@ -47,16 +47,25 @@ namespace SKOShopifyWebsite.Models
 
     public class VariantNode
     {
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("priceV2")]
         public MoneyV2 PriceV2 { get; set; }
+
+        [JsonPropertyName("selectedOptions")]
+        public List<SelectedOption> SelectedOptions { get; set; }
     }
 
     public class VariantEdge
     {
+        [JsonPropertyName("node")]
         public VariantNode Node { get; set; }
     }
 
     public class VariantConnection
     {
+        [JsonPropertyName("edges")]
         public List<VariantEdge> Edges { get; set; }
     }
 
@@ -88,6 +97,7 @@ namespace SKOShopifyWebsite.Models
         public ImageConnection Images { get; set; }
         [JsonPropertyName("priceRange")]
         public PriceRange PriceRange { get; set; }
+        [JsonPropertyName("variants")]
         public VariantConnection Variants { get; set; }
         [JsonPropertyName("description")]
         public string Description { get; set; }

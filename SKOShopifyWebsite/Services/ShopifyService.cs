@@ -83,27 +83,41 @@ namespace SKOShopifyWebsite.Services
             var query = $@"
             {{
                 productByHandle(handle: ""{handle}"") {{
-                title
-                handle
-                description
-                options(first:5)
-                    {{
+                    title
+                    handle
+                    description
+                    options(first: 5) {{
                         name
                         values
                     }}
-                priceRange {{
-                    minVariantPrice {{
-                    amount
-                    currencyCode
+                    priceRange {{
+                        minVariantPrice {{
+                            amount
+                            currencyCode
+                        }}
                     }}
-                }}
-                images(first: 10) {{
-                    edges {{
-                    node {{
-                        src
+                    images(first: 10) {{
+                        edges {{
+                            node {{
+                                src
+                            }}
+                        }}
                     }}
+                    variants(first: 20) {{
+                        edges {{
+                            node {{
+                                id
+                                priceV2 {{
+                                    amount
+                                    currencyCode
+                                }}
+                                selectedOptions {{
+                                    name
+                                    value
+                                }}
+                            }}
+                        }}
                     }}
-                }}
                 }}
             }}";
 
@@ -123,6 +137,67 @@ namespace SKOShopifyWebsite.Services
 
             var product = JsonSerializer.Deserialize<Product>(productElem.GetRawText());
             return product;
+        }
+
+        public async Task<CartResult> AddItemToCartAsync(string variantId)
+        {
+            var query = @"
+            mutation cartCreate($lines: [CartLineInput!]!) {
+                cartCreate(input: { lines: $lines }) {
+                cart {
+                    id
+                    checkoutUrl
+                }
+                userErrors {
+                    field
+                    message
+                }
+                }
+            }";
+
+            var variables = new
+            {
+                lines = new[]
+                {
+            new {
+                quantity = 1,
+                merchandiseId = variantId
+            }
+        }
+            };
+
+            var body = new
+            {
+                query,
+                variables
+            };
+
+            var json = JsonSerializer.Serialize(body);
+            var response = await _client.PostAsync("", new StringContent(json, Encoding.UTF8, "application/json"));
+            response.EnsureSuccessStatusCode();
+
+            using var stream = await response.Content.ReadAsStreamAsync();
+            using var doc = await JsonDocument.ParseAsync(stream);
+
+            var cartElem = doc.RootElement
+                .GetProperty("data")
+                .GetProperty("cartCreate")
+                .GetProperty("cart");
+
+            var cartId = cartElem.GetProperty("id").GetString();
+            var checkoutUrl = cartElem.GetProperty("checkoutUrl").GetString();
+
+            return new CartResult
+            {
+                CartId = cartId,
+                CheckoutUrl = checkoutUrl
+            };
+        }
+
+        public class CartResult
+        {
+            public string CartId { get; set; }
+            public string CheckoutUrl { get; set; }
         }
 
     }

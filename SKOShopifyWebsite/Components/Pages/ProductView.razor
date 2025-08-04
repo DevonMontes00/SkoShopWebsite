@@ -3,6 +3,7 @@
 @using SKOShopifyWebsite.Services
 @using SKOShopifyWebsite.Components.CustomComponents
 @inject ShopifyService Shopify
+@rendermode InteractiveServer
 
 <section class="main-layout">
     @if (displayProduct == null)
@@ -13,10 +14,10 @@
     {
         <section class="left-column"> 
             <div class="main-preview">
-                <img class="image" src="@displayProduct.Images?.Edges?.FirstOrDefault()?.Node?.Src" alt="@displayProduct.Title" />
+                <img id="maim-image" class="image" src="@mainImage" alt="@displayProduct.Title" />
             </div>
             <div class="mini-preview-holder">
-                <MiniPreviewComponent ListOfImages="@imageUrls"/>
+                <MiniPreviewComponent ListOfImages="@imageUrls" OnPreviewImageClick="HandlePreivewImageClicked"/>
             </div>
         </section>
 
@@ -49,11 +50,20 @@
             <div class="product-sizes">
                 @foreach (var size in sizes)
                 {
-                    <button class="size-button">
+                    <button class="@(selectedSize == size ? "size-button selected" : "size-button")" @onclick="() => OnSizeButtonClicked(size)">
                         <b3>@size</b3>
                     </button>
                 }
             </div>
+
+            @if (selectedSize != "")
+            {
+                <div class="add-to-checkout">
+                    <button class="add-to-cart-btn" @onclick="OnAddToCartClicked">
+                        <b3>Add To Cart</b3>
+                    </button>
+                </div>
+            }
         </section>
     }
 </section>
@@ -65,19 +75,58 @@
 
     public Product displayProduct { get; set; }
 
-    public string PriceString =>
+    private string PriceString =>
         displayProduct?.PriceRange?.MinVariantPrice?.Amount + " " +
         displayProduct?.PriceRange?.MinVariantPrice?.CurrencyCode;
 
-    public string ProductDescription => displayProduct?.Description ?? "";
+    private string ProductDescription => displayProduct?.Description ?? "";
 
-    public List<string> sizes => displayProduct?.Options?.FirstOrDefault(o => o.Name == "Size")?.Values ?? new List<string>();
+    private List<string> sizes => displayProduct?.Options?.FirstOrDefault(o => o.Name == "Size")?.Values ?? new List<string>();
 
-    public List<string> imageUrls => displayProduct?.Images?.Edges?.Select(e => e.Node.Src).ToList() ?? new();
+    private List<string> imageUrls => displayProduct?.Images?.Edges?.Select(e => e.Node.Src).ToList() ?? new();
+
+    private string mainImage;
+
+    private string selectedSize = "";
 
     protected override async Task OnParametersSetAsync()
     {
         displayProduct = await Shopify.GetProductByHandleAsync(Handle);
+
+        mainImage = displayProduct.Images?.Edges?.FirstOrDefault()?.Node?.Src;
+    }
+
+    private void HandlePreivewImageClicked(string imageSrc)
+    {
+        mainImage = imageSrc;
+    }
+
+    private void OnSizeButtonClicked(string size)
+    {
+        selectedSize = size;
+    }
+
+    private async void OnAddToCartClicked()
+    {
+        string? selectedVariantId = displayProduct.Variants.Edges
+        .Select(e => e.Node)
+        .FirstOrDefault(v => 
+            v.SelectedOptions.Any(opt => 
+                opt.Name == "Size" && opt.Value == selectedSize))?.Id;
+
+        if (selectedVariantId != null)
+             await AddToCart(selectedVariantId);
+    }
+
+    private async Task AddToCart(string variantId)
+    {
+        var result = await Shopify.AddItemToCartAsync(variantId);
+
+        if (!string.IsNullOrEmpty(result?.CartId))
+        {
+            Console.WriteLine($"Added to cart: {result.CartId}");
+            // You can now show a cart summary or button to checkout
+        }
     }
 }
 

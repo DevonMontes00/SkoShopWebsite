@@ -75,6 +75,10 @@
     margin-right: 10px;
 }
 
+.size-button.selected {
+    background-color: #999999;
+}
+
 .dropdown {
     
 }
