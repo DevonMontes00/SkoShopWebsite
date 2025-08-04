@@ -6,6 +6,10 @@ using SKOShopifyWebsite.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var shopifyConfig = builder.Configuration.GetSection("Shopify");
+var shopifyToken = shopifyConfig["AccessToken"];
+var shopifyBaseUrl = shopifyConfig["BaseUrl"];
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
@@ -14,11 +18,11 @@ builder.Services.AddScoped(sp =>
 {
     var client = new HttpClient
     {
-        BaseAddress = new Uri("https://spreadkindessorganically.myshopify.com/api/2024-04/graphql.json")
+        BaseAddress = new Uri(shopifyBaseUrl!)
     };
     client.DefaultRequestHeaders.Add(
         "X-Shopify-Storefront-Access-Token",
-        "345572827f03cd3b47dab3366ce5b6cd");
+        shopifyToken!);
     return client;
 });
 
