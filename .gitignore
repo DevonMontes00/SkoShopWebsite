@@ -483,4 +483,4 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
-SKOShopifyWebsite\appsettings.Development.json
+SKOShopifyWebsite/appsettings.Development.json
