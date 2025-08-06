@@ -1,0 +1,49 @@
+﻿@inject SKOShopifyWebsite.Services.ShopifyService Shopify
+@using SKOShopifyWebsite.Models
+
+<div class="cart-sidebar @(IsOpen ? "open" : "")">
+    <div class="cart-header">
+        <h2>Your Cart</h2>
+        <button class="close-btn" @onclick="CloseCart">×</button>
+    </div>
+
+    @if (Cart != null && Cart.Lines?.Edges?.Any() == true)
+    {
+            <div class="cart-items">
+            @foreach (var item in Cart.Lines.Edges)
+            {
+                        <div class="cart-item">
+                            <img src="@item.Node.Merchandise.Image?.Src" alt="@item.Node.Merchandise.Title" />
+                            <div class="cart-details">
+                                <strong>@item.Node.Merchandise.Product?.Title</strong>
+                                <div>@item.Node.Merchandise.Title</div>
+                                <div>Qty: @item.Node.Quantity</div>
+                                <div>@item.Node.Merchandise.PriceV2.Amount @item.Node.Merchandise.PriceV2.CurrencyCode</div>
+                            </div>
+                        </div>
+            }
+            </div>
+            <a href="@Cart.CheckoutUrl" target="_blank" class="checkout-btn">Checkout</a>
+    }
+    else
+    {
+            <p>Your cart is empty.</p>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public Cart Cart { get; set; }
+
+    private async Task CloseCart()
+    {
+        await OnClose.InvokeAsync(null);
+    }
+}
+

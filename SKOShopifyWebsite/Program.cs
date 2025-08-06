@@ -10,6 +10,8 @@ var shopifyConfig = builder.Configuration.GetSection("Shopify");
 var shopifyToken = shopifyConfig["AccessToken"];
 var shopifyBaseUrl = shopifyConfig["BaseUrl"];
 
+builder.Services.AddHttpContextAccessor();
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();

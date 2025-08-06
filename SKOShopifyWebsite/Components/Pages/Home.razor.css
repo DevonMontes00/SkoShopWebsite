@@ -1,4 +1,19 @@
-﻿.main-layout {
+﻿.cart-component{
+    position:fixed;
+    z-index: 10;
+    right:0;
+    top:0;
+}
+
+.cart-svg{
+    float:right;
+    height:2.5rem;
+    width:2.5rem;
+    border: none;
+    background:transparent;
+}
+
+.main-layout {
     padding: 0;
     margin: 25px;
 }

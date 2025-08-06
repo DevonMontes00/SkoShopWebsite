@@ -3,7 +3,16 @@
 @using SKOShopifyWebsite.Services
 @using SKOShopifyWebsite.Components.CustomComponents
 @inject ShopifyService Shopify
+@inject IHttpContextAccessor HttpContextAccessor
 @rendermode InteractiveServer
+
+@if (showCart)
+{
+    <div class="cart-component">
+        <CartComponent IsOpen="@showCart" Cart="@currentCart" OnClose="@CloseCart"/>
+    </div>
+}
+
 
 <section class="main-layout">
     @if (displayProduct == null)
@@ -22,6 +31,12 @@
         </section>
 
         <section class="right-column"> 
+            <button class="cart-svg" @onclick="ToggleCart">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+                    <path fill="#FFFFFF" d="M24 48C10.7 48 0 58.7 0 72C0 85.3 10.7 96 24 96L69.3 96C73.2 96 76.5 98.8 77.2 102.6L129.3 388.9C135.5 423.1 165.3 448 200.1 448L456 448C469.3 448 480 437.3 480 424C480 410.7 469.3 400 456 400L200.1 400C188.5 400 178.6 391.7 176.5 380.3L171.4 352L475 352C505.8 352 532.2 330.1 537.9 299.8L568.9 133.9C572.6 114.2 557.5 96 537.4 96L124.7 96L124.3 94C119.5 67.4 96.3 48 69.2 48L24 48zM208 576C234.5 576 256 554.5 256 528C256 501.5 234.5 480 208 480C181.5 480 160 501.5 160 528C160 554.5 181.5 576 208 576zM432 576C458.5 576 480 554.5 480 528C480 501.5 458.5 480 432 480C405.5 480 384 501.5 384 528C384 554.5 405.5 576 432 576z"/>
+                </svg>
+            </button>
+
             <div class="main-text">
                 <div class="product-title">
                     <h1>@displayProduct?.Title</h1>
@@ -60,7 +75,7 @@
             {
                 <div class="add-to-checkout">
                     <button class="add-to-cart-btn" @onclick="OnAddToCartClicked">
-                        <b3>Add To Cart</b3>
+                        <b3 class="cart-btn-txt">Add To Cart</b3>
                     </button>
                 </div>
             }
@@ -70,6 +85,10 @@
 
 
 @code {
+    [Parameter]
+    public EventCallback<ProductVariant> OnItemAddedToCart { get; set; }
+
+
     [Parameter]
     public string Handle { get; set; }
 
@@ -88,6 +107,20 @@
     private string mainImage;
 
     private string selectedSize = "";
+
+    bool showCart = false;
+    private Cart currentCart;
+    private string cartId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var cookie = HttpContextAccessor.HttpContext?.Request.Cookies["cartId"];
+        if (!string.IsNullOrEmpty(cookie))
+        {
+            cartId = cookie;
+            currentCart = await Shopify.GetCartAsync(cartId);
+        }
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -108,6 +141,8 @@
 
     private async void OnAddToCartClicked()
     {
+        Console.WriteLine("Add To Cart Pressed");
+
         string? selectedVariantId = displayProduct.Variants.Edges
         .Select(e => e.Node)
         .FirstOrDefault(v => 
@@ -115,7 +150,7 @@
                 opt.Name == "Size" && opt.Value == selectedSize))?.Id;
 
         if (selectedVariantId != null)
-             await AddToCart(selectedVariantId);
+            await AddToCart(selectedVariantId);
     }
 
     private async Task AddToCart(string variantId)
@@ -124,9 +159,77 @@
 
         if (!string.IsNullOrEmpty(result?.CartId))
         {
+            AddProductToCurrentCart(variantId);
             Console.WriteLine($"Added to cart: {result.CartId}");
             // You can now show a cart summary or button to checkout
         }
     }
+
+    private void ToggleCart()
+    {
+        showCart = !showCart;
+    }
+
+    private Task CloseCart()
+    {
+        showCart = false;
+        return Task.CompletedTask;
+    }
+
+    public void AddProductToCurrentCart(string variantId)
+    {
+        var variant = displayProduct.Variants?.Edges
+            .Select(e => e.Node)
+            .FirstOrDefault(v => v.Id == variantId);
+
+        if (variant == null)
+        {
+            Console.WriteLine("Variant not found.");
+            return;
+        }
+
+        var newCartLine = new CartLineEdge
+            {
+                Node = new CartLine
+                {
+                    Quantity = 1,
+                    Merchandise = new ProductVariant
+                    {
+                        Id = variant.Id,
+                        Title = displayProduct.Title,
+                        PriceV2 = variant.PriceV2,
+                        Image = new VariantImage
+                        {
+                            Src = displayProduct.Images?.Edges?.FirstOrDefault()?.Node?.Src ?? ""
+                        },
+                        Product = new CartProduct
+                        {
+                            Title = displayProduct.Title
+                        }
+                    }
+                }
+            };
+
+        if (currentCart.Lines == null)
+        {
+            currentCart.Lines = new CartLineConnection
+                {
+                    Edges = new List<CartLineEdge>()
+                };
+        }
+
+        var existingLine = currentCart.Lines.Edges
+            .FirstOrDefault(l => l.Node.Merchandise.Id == variantId);
+
+        if (existingLine != null)
+        {
+            existingLine.Node.Quantity += 1;
+        }
+        else
+        {
+            currentCart.Lines.Edges.Add(newCartLine);
+        }
+    }
+
 }
 

@@ -139,6 +139,9 @@ namespace SKOShopifyWebsite.Services
             return product;
         }
 
+        public string CurrentCartId { get; private set; }
+        public string CheckoutUrl { get; private set; }
+
         public async Task<CartResult> AddItemToCartAsync(string variantId)
         {
             var query = @"
@@ -184,13 +187,13 @@ namespace SKOShopifyWebsite.Services
                 .GetProperty("cartCreate")
                 .GetProperty("cart");
 
-            var cartId = cartElem.GetProperty("id").GetString();
-            var checkoutUrl = cartElem.GetProperty("checkoutUrl").GetString();
+            CurrentCartId = cartElem.GetProperty("id").GetString();
+            CheckoutUrl = cartElem.GetProperty("checkoutUrl").GetString();
 
             return new CartResult
             {
-                CartId = cartId,
-                CheckoutUrl = checkoutUrl
+                CartId = CurrentCartId,
+                CheckoutUrl = CheckoutUrl
             };
         }
 
@@ -198,6 +201,105 @@ namespace SKOShopifyWebsite.Services
         {
             public string CartId { get; set; }
             public string CheckoutUrl { get; set; }
+        }
+
+        public async Task<Cart> GetCartAsync(string cartId)
+        {
+            var query = @"
+            query GetCart($cartId: ID!) {
+              cart(id: $cartId) {
+                id
+                checkoutUrl
+                lines(first: 10) {
+                  edges {
+                    node {
+                      quantity
+                      merchandise {
+                        ... on ProductVariant {
+                          id
+                          title
+                          image {
+                            src
+                          }
+                          product {
+                            title
+                          }
+                          priceV2 {
+                            amount
+                            currencyCode
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }";
+
+            var variables = new { cartId };
+
+            var body = new { query, variables };
+            var json = JsonSerializer.Serialize(body);
+
+            var response = await _client.PostAsync("", new StringContent(json, Encoding.UTF8, "application/json"));
+            response.EnsureSuccessStatusCode();
+
+            using var stream = await response.Content.ReadAsStreamAsync();
+            using var doc = await JsonDocument.ParseAsync(stream);
+
+            var cartElem = doc.RootElement
+                .GetProperty("data")
+                .GetProperty("cart");
+
+            return JsonSerializer.Deserialize<Cart>(cartElem.GetRawText());
+        }
+
+        public async Task<CartResult> CreateCartAsync()
+        {
+            var query = @"
+            mutation {
+                cartCreate {
+                    cart {
+                        id
+                        checkoutUrl
+                    }
+                    userErrors {
+                        field
+                        message
+                    }
+                }
+            }";
+
+            var requestBody = new
+            {
+                query
+            };
+
+            var json = JsonSerializer.Serialize(requestBody);
+            var response = await _client.PostAsync("", new StringContent(json, Encoding.UTF8, "application/json"));
+            response.EnsureSuccessStatusCode();
+
+            using var stream = await response.Content.ReadAsStreamAsync();
+            using var doc = await JsonDocument.ParseAsync(stream);
+
+            var root = doc.RootElement.GetProperty("data").GetProperty("cartCreate");
+
+            // Optional: Handle userErrors
+            if (root.TryGetProperty("userErrors", out var errors) && errors.GetArrayLength() > 0)
+            {
+                var error = errors[0];
+                throw new Exception($"Cart create error: {error.GetProperty("message").GetString()}");
+            }
+
+            var cart = root.GetProperty("cart");
+            var cartId = cart.GetProperty("id").GetString();
+            var checkoutUrl = cart.GetProperty("checkoutUrl").GetString();
+
+            return new CartResult
+            {
+                CartId = cartId!,
+                CheckoutUrl = checkoutUrl!
+            };
         }
 
     }
